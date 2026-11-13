@@ -1,8 +1,415 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ATU BI | Recaudación por multas</title><link rel="stylesheet" href="assets/css/styles.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head><body>
-<header><div class="brand"><b>ATU</b><div><strong>ATU BI</strong><small>Inteligencia de recaudación</small></div></div><span>● Tablero ejecutivo　|　<span id="cutoff">Fecha de corte: pendiente</span></span></header>
-<main><section class="hero"><div><small>TRANSPARENCIA · GESTIÓN DE COBRANZAS</small><h1>Recaudación por multas</h1><p>Panel ejecutivo de seguimiento, evolución y composición de la recaudación.</p></div><button id="reload">Actualizar vista</button></section>
-<section class="filters"><label>Desde <input id="dateFrom" type="date"></label><label>Hasta <input id="dateTo" type="date"></label><label>Subárea <select id="subarea"><option value="">Todas las subáreas</option></select></label><button id="clearFilters" class="outline">Limpiar filtros</button></section>
-<div id="notice">Cargando información publicada…</div>
-<section class="kpis"><article><span>Recaudación total</span><strong id="kpiAmount">—</strong><small>Según fecha de pago</small></article><article><span>Registros de pago</span><strong id="kpiCount">—</strong><small>Detalle desagregado por acta</small></article><article><span>Primera fecha de pago</span><strong id="kpiMinDate">—</strong><small>Inicio del histórico</small></article><article><span>Última fecha de pago</span><strong id="kpiMaxDate">—</strong><small>Último registro procesado</small></article></section>
-<h2>Comportamiento de la recaudación</h2><section class="grid"><article class="panel wide"><h3>Recaudación mensual</h3><div class="chart"><canvas id="monthlyChart"></canvas></div></article><article class="panel"><h3>Recaudación por subárea</h3><div class="chart"><canvas id="subareaChart"></canvas></div></article><article class="panel"><h3>Recaudación por entidad bancaria</h3><div class="chart"><canvas id="bankChart"></canvas></div></article><article class="panel wide"><h3>Principales multas</h3><table><thead><tr><th>Falta</th><th>Registros</th><th>Recaudación</th></tr></thead><tbody id="infractionsTable"><tr><td colspan="3">Datos pendientes</td></tr></tbody></table></article></section>
-<footer>ATU BI · Recaudación por multas <span>Información sujeta a validación y autorización institucional.</span></footer></main><script src="assets/js/app.js"></script></body></html>
+
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#102b46">
+
+    <title>ATU BI | Recaudación por multas</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+<header class="topbar">
+    <a class="brand" href="./">
+        <span class="brand-mark">ATU</span>
+
+        <span class="brand-copy">
+            <strong>ATU BI</strong>
+            <small>Inteligencia de recaudación</small>
+        </span>
+    </a>
+
+    <div class="topbar-meta">
+        <i class="status-dot"></i>
+        <span>Tablero ejecutivo</span>
+        <i class="meta-divider"></i>
+        <span id="cutoff">Fecha de corte: pendiente</span>
+    </div>
+</header>
+
+<main class="container">
+
+    <!-- ENCABEZADO -->
+    <section class="hero">
+        <div>
+            <div class="eyebrow">
+                TRANSPARENCIA · GESTIÓN DE COBRANZAS
+            </div>
+
+            <h1>Recaudación por multas</h1>
+
+            <p>
+                Seguimiento ejecutivo, evolución y composición de la recaudación.
+            </p>
+        </div>
+
+        <button id="reload" class="button button-primary" type="button">
+            ↻ &nbsp;Actualizar vista
+        </button>
+    </section>
+
+
+    <!-- FILTROS -->
+    <section class="filter-panel">
+
+        <div class="filter-heading">
+            <div>
+                <span class="section-kicker">ANÁLISIS</span>
+                <strong>Filtros de consulta</strong>
+            </div>
+
+            <button id="clearFilters" class="button button-quiet" type="button">
+                Limpiar filtros
+            </button>
+        </div>
+
+        <div class="filter-controls">
+
+            <label>
+                Año
+                <select id="mainYear">
+                    <option value="">Todos los años</option>
+                </select>
+            </label>
+
+            <label>
+                Desde
+                <input id="dateFrom" type="date">
+            </label>
+
+            <label>
+                Hasta
+                <input id="dateTo" type="date">
+            </label>
+
+            <div class="stage-filter">
+
+                <span class="filter-label">Estadíos</span>
+
+                <button
+                    id="stageDropdownButton"
+                    type="button"
+                    class="stage-dropdown-button"
+                    aria-expanded="false">
+                    <span id="stageDropdownText">Todos los estadíos</span>
+                    <span class="dropdown-arrow">⌄</span>
+                </button>
+
+                <div id="stageDropdownMenu" class="stage-dropdown-menu">
+
+                    <label>
+                        <input type="checkbox" value="COACTIVO">
+                        <span>COACTIVO</span>
+                    </label>
+
+                    <label>
+                        <input type="checkbox" value="DFS">
+                        <span>DFS</span>
+                    </label>
+
+                    <label>
+                        <input type="checkbox" value="FRACCIONAMIENTO">
+                        <span>FRACCIONAMIENTO</span>
+                    </label>
+
+                </div>
+            </div>
+
+        </div>
+
+        <p class="filter-help">
+            Puedes seleccionar uno o varios estadíos. Si no seleccionas ninguno, se mostrarán todos.
+        </p>
+
+    </section>
+
+
+    <!-- ESTADO DE CARGA -->
+    <div id="notice" class="notice" role="status">
+        Cargando información…
+    </div>
+
+
+    <!-- INDICADORES PRINCIPALES -->
+    <section class="section-block">
+
+        <div class="section-title-row">
+            <div>
+                <span class="section-kicker">RESUMEN GENERAL</span>
+                <h2>Indicadores principales</h2>
+            </div>
+
+            <span class="section-note">Según fecha de pago</span>
+        </div>
+
+        <div class="kpi-grid">
+
+            <article class="kpi-card kpi-primary">
+                <div class="kpi-label">Recaudación total</div>
+                <div class="kpi-value" id="kpiAmount">—</div>
+                <div class="kpi-foot">Importe acumulado del periodo</div>
+            </article>
+
+            <article class="kpi-card">
+                <div class="kpi-label">Registros de pago</div>
+                <div class="kpi-value" id="kpiCount">—</div>
+                <div class="kpi-foot">Detalle desagregado por acta</div>
+            </article>
+
+            <article class="kpi-card">
+                <div class="kpi-label">Variación mensual</div>
+                <div class="kpi-value kpi-change" id="kpiMonthlyVariation">—</div>
+                <div class="kpi-foot" id="monthlyVariationLabel">
+                    Último mes vs. mes anterior
+                </div>
+            </article>
+
+            <article class="kpi-card">
+                <div class="kpi-label">Variación interanual</div>
+                <div class="kpi-value kpi-change" id="kpiYearlyVariation">—</div>
+                <div class="kpi-foot" id="yearlyVariationLabel">
+                    Mismo mes del año anterior
+                </div>
+            </article>
+
+        </div>
+
+        <div class="period-strip">
+
+            <div>
+                <span>Primera fecha de pago</span>
+                <strong id="kpiMinDate">—</strong>
+            </div>
+
+            <div>
+                <span>Última fecha de pago</span>
+                <strong id="kpiMaxDate">—</strong>
+            </div>
+
+            <div>
+                <span>Estadío con mayor recaudación</span>
+                <strong id="leadingSubarea">—</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- EVOLUCIÓN DE LA RECAUDACIÓN -->
+    <section class="section-block">
+
+        <div class="section-title-row">
+            <div>
+                <span class="section-kicker">EVOLUCIÓN</span>
+                <h2>Comportamiento de la recaudación</h2>
+            </div>
+
+            <span class="section-note">Importes en soles (S/)</span>
+        </div>
+
+
+        <!-- GRÁFICO ANUAL -->
+        <article class="panel chart-panel annual-panel">
+
+            <div class="panel-heading">
+                <div>
+                    <h3>Recaudación mensual del año seleccionado</h3>
+                    <p>
+                        Evolución mensual del ejercicio elegido en los filtros principales
+                    </p>
+                </div>
+            </div>
+
+            <div class="chart chart-large">
+                <canvas id="annualChart"></canvas>
+            </div>
+
+        </article>
+
+
+        <!-- COMPARACIÓN INTERANUAL -->
+        <article class="panel chart-panel comparison-panel">
+
+            <div class="panel-heading comparison-heading">
+
+                <div>
+                    <h3>Comparación interanual de la recaudación</h3>
+                    <p>
+                        Barras comparativas y variación porcentual interanual
+                    </p>
+                </div>
+
+                <div class="year-selectors">
+
+                    <label>
+                        Año base
+                        <select id="compareYearA"></select>
+                    </label>
+
+                    <label>
+                        Año comparativo
+                        <select id="compareYearB"></select>
+                    </label>
+
+                </div>
+
+            </div>
+
+            <div class="chart chart-large">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- COMPOSICIÓN DE LA RECAUDACIÓN -->
+    <section class="section-block">
+
+        <div class="section-title-row">
+            <div>
+                <span class="section-kicker">COMPOSICIÓN</span>
+                <h2>Distribución de la recaudación</h2>
+            </div>
+        </div>
+
+
+        <div class="two-column">
+
+            <!-- ESTADÍOS -->
+            <article class="panel chart-panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h3>Participación por estadío</h3>
+                        <p>Distribución del importe recaudado</p>
+                    </div>
+                </div>
+
+                <div class="chart chart-medium">
+                    <canvas id="subareaChart"></canvas>
+                </div>
+
+                <div id="subareaLegend" class="share-list"></div>
+
+            </article>
+
+
+            <!-- BANCOS -->
+            <article class="panel chart-panel">
+
+                <div class="panel-heading">
+                    <div>
+                        <h3>Recaudación por entidad bancaria</h3>
+                        <p>Importe y participación sobre el total</p>
+                    </div>
+                </div>
+
+                <div class="chart chart-medium">
+                    <canvas id="bankChart"></canvas>
+                </div>
+
+                <div id="bankLegend" class="share-list"></div>
+
+            </article>
+
+        </div>
+
+
+        <!-- DETALLE POR SUBÁREAS -->
+        <article class="panel chart-panel subarea-detail-panel">
+
+            <div class="panel-heading">
+                <div>
+                    <h3>Recaudación por subárea</h3>
+                    <p>
+                        Detalle de COACTIVO, SD SANCION,
+                        SD FISCALIZACION y FRACCIONAMIENTO
+                    </p>
+                </div>
+            </div>
+
+            <div class="chart chart-medium">
+                <canvas id="subareaDetailChart"></canvas>
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- RANKING DE MULTAS -->
+    <section class="section-block">
+
+        <div class="section-title-row">
+            <div>
+                <span class="section-kicker">DETALLE</span>
+                <h2>Top 10 principales multas</h2>
+            </div>
+
+            <span class="section-note">Ordenadas por recaudación</span>
+        </div>
+
+        <article class="panel table-panel">
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Falta</th>
+                            <th class="numeric">Registros</th>
+                            <th class="numeric">Recaudación</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="infractionsTable">
+                        <tr>
+                            <td colspan="4">Cargando datos…</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- PIE -->
+    <footer class="footer">
+
+        <span>
+            <strong>ATU BI</strong> · Recaudación por multas
+        </span>
+
+        <span>
+            Información sujeta a validación y autorización institucional.
+        </span>
+
+    </footer>
+
+</main>
+
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>
