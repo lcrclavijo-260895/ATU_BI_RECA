@@ -78,13 +78,6 @@
         <div class="filter-controls">
 
             <label>
-                Año
-                <select id="mainYear">
-                    <option value="">Todos los años</option>
-                </select>
-            </label>
-
-            <label>
                 Desde
                 <input id="dateFrom" type="date">
             </label>
@@ -224,12 +217,19 @@
         <!-- GRÁFICO ANUAL -->
         <article class="panel chart-panel annual-panel">
 
-            <div class="panel-heading">
+            <div class="panel-heading comparison-heading">
                 <div>
                     <h3>Recaudación mensual del año seleccionado</h3>
                     <p>
-                        Evolución mensual del ejercicio elegido en los filtros principales
+                    Evolución mensual del ejercicio elegido
                     </p>
+                </div>
+
+                <div class="year-selectors">
+                    <label>
+                        Año de consulta
+                        <select id="annualYear"></select>
+                    </label>
                 </div>
             </div>
 

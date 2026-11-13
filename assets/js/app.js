@@ -204,28 +204,25 @@ function initFilters() {
         )
     )].filter(Number.isFinite).sort((a, b) => a - b);
 
-    const mainYear = $('mainYear');
+    const annualYear = $('annualYear');
     const yearA = $('compareYearA');
     const yearB = $('compareYearB');
 
-    const previousMain = mainYear.value;
+    const previousAnnual = annualYear.value;
     const previousA = yearA.value;
     const previousB = yearB.value;
 
-    mainYear.innerHTML = years.map(year =>
+    const options = years.map(year =>
         `<option value="${year}">${year}</option>`
     ).join('');
 
-    const comparisonOptions = years.map(year =>
-        `<option value="${year}">${year}</option>`
-    ).join('');
-
-    yearA.innerHTML = comparisonOptions;
-    yearB.innerHTML = comparisonOptions;
+    annualYear.innerHTML = options;
+    yearA.innerHTML = options;
+    yearB.innerHTML = options;
 
     if (years.length) {
-        mainYear.value = years.includes(Number(previousMain))
-            ? previousMain
+        annualYear.value = years.includes(Number(previousAnnual))
+            ? previousAnnual
             : years.at(-1);
 
         yearA.value = years.includes(Number(previousA))
@@ -243,7 +240,8 @@ function initFilters() {
     if (!filtersInitialized) {
         $('dateFrom').addEventListener('change', render);
         $('dateTo').addEventListener('change', render);
-        mainYear.addEventListener('change', render);
+
+        annualYear.addEventListener('change', render);
 
         yearA.addEventListener('change', render);
         yearB.addEventListener('change', render);
@@ -262,18 +260,15 @@ Las fechas Desde/Hasta acotan ese ejercicio.
 El filtro de estadíos se aplica a todos los gráficos.
 */
 function filtered() {
-    const year = $('mainYear').value;
     const from = $('dateFrom').value;
     const to = $('dateTo').value;
     const stages = selectedStages();
 
     const isValid = row => {
         const date = dateOnly(row.Fecha);
-        const rowYear = date.slice(0, 4);
         const stage = row.Estadio || 'SIN CLASIFICAR';
 
         return (
-            (!year || rowYear === year) &&
             (!from || date >= from) &&
             (!to || date <= to) &&
             (!stages.length || stages.includes(stage))
@@ -406,7 +401,7 @@ const doughnutCenterPlugin = {
 ========================================= */
 
 function renderAnnualChart(rows) {
-    const selectedYear = $('mainYear').value;
+    const selectedYear = $('annualYear').value;
 
     const months = [
         'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
@@ -418,6 +413,9 @@ function renderAnnualChart(rows) {
 
     rows.forEach(row => {
         const date = dateOnly(row.Fecha);
+
+        if (date.slice(0, 4) !== selectedYear) return;
+
         const month = Number(date.slice(5, 7)) - 1;
 
         if (month < 0 || month > 11) return;
@@ -970,7 +968,7 @@ function render() {
 
     destroyCharts();
 
-    renderAnnualChart(filteredData.stages);
+    renderAnnualChart(comparisonRows());
 
     renderComparisonChart(comparisonRows());
 
@@ -1042,16 +1040,6 @@ $('reload').onclick = load;
 $('clearFilters').onclick = () => {
     $('dateFrom').value = '';
     $('dateTo').value = '';
-
-    const years = [...new Set(
-        data.diario_estadios.map(row =>
-            Number(dateOnly(row.Fecha).slice(0, 4))
-        )
-    )].filter(Number.isFinite).sort((a, b) => a - b);
-
-    if (years.length) {
-        $('mainYear').value = years.at(-1);
-    }
 
     $('stageDropdownMenu')
         .querySelectorAll('input[type="checkbox"]')
